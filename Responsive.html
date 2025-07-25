@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Responsive Quiz & API Demo</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 30px;
+    background: #282c34;
+    color: #eee;
+    transition: background-color 0.4s;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  /* Responsive colors & fonts */
+  @media (max-width: 600px) {
+    body {
+      background: #4ecca3;
+      color: #022c22;
+    }
+    h1 {
+      font-size: 24px;
+    }
+  }
+
+  @media (min-width: 601px) and (max-width: 900px) {
+    body {
+      background: #05668d;
+      color: #d0e1f9;
+    }
+    h1 {
+      font-size: 32px;
+    }
+  }
+
+  @media (min-width: 901px) {
+    body {
+      background: #011f4b;
+      color: #a7c7e7;
+    }
+    h1 {
+      font-size: 40px;
+    }
+  }
+
+  /* Quiz container */
+  #quiz-container {
+    max-width: 480px;
+    margin: 0 auto 40px;
+    background: rgba(255,255,255,0.1);
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+  }
+
+  .question {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+
+  .options button {
+    display: block;
+    width: 100%;
+    background: #028090;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin: 6px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+  }
+
+  .options button:hover {
+    background: #05668d;
+  }
+
+  .options button:disabled {
+    cursor: default;
+    background: #555;
+  }
+
+  /* Result */
+  #result {
+    font-size: 1.3rem;
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  /* Joke section */
+  #joke-section {
+    max-width: 480px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  #joke {
+    font-style: italic;
+    margin-bottom: 20px;
+    min-height: 40px;
+  }
+
+  #joke-button {
+    background: #028090;
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  #joke-button:hover {
+    background: #05668d;
+  }
+</style>
+</head>
+<body>
+
+<h1>Responsive Quiz & Joke Fetcher</h1>
+
+<div id="quiz-container">
+  <div id="question-container">
+    <div id="question" class="question"></div>
+    <div id="options" class="options"></div>
+  </div>
+  <div id="result"></div>
+</div>
+
+<div id="joke-section">
+  <div id="joke">Loading joke...</div>
+  <button id="joke-button" onclick="fetchJoke()">Get New Joke</button>
+</div>
+
+<script>
+  // Quiz data
+  const quiz = [
+    {
+      question: "What does CSS stand for?",
+      options: [
+        "Cascading Style Sheets",
+        "Computer Style Sheets",
+        "Creative Style System",
+        "Colorful Style Sheets"
+      ],
+      answer: 0
+    },
+    {
+      question: "Which HTML element is used to link CSS files?",
+      options: [
+        "<script>",
+        "<link>",
+        "<style>",
+        "<css>"
+      ],
+      answer: 1
+    },
+    {
+      question: "Which property is used to change the text color in CSS?",
+      options: [
+        "font-color",
+        "color",
+        "text-color",
+        "background-color"
+      ],
+      answer: 1
+    }
+  ];
+
+  let currentQuestion = 0;
+  let score = 0;
+
+  const questionEl = document.getElementById('question');
+  const optionsEl = document.getElementById('options');
+  const resultEl = document.getElementById('result');
+
+  function loadQuestion() {
+    const q = quiz[currentQuestion];
+    questionEl.textContent = q.question;
+    optionsEl.innerHTML = '';
+    resultEl.textContent = '';
+
+    q.options.forEach((option, index) => {
+      const btn = document.createElement('button');
+      btn.textContent = option;
+      btn.onclick = () => selectOption(index);
+      optionsEl.appendChild(btn);
+    });
+  }
+
+  function selectOption(selectedIndex) {
+    const q = quiz[currentQuestion];
+    const buttons = optionsEl.querySelectorAll('button');
+
+    buttons.forEach(btn => btn.disabled = true); // disable all buttons after selection
+
+    if (selectedIndex === q.answer) {
+      score++;
+      resultEl.textContent = "Correct! 🎉";
+    } else {
+      resultEl.textContent = `Wrong! Correct answer: ${q.options[q.answer]}`;
+    }
+
+    currentQuestion++;
+
+    if (currentQuestion < quiz.length) {
+      setTimeout(loadQuestion, 2000); // load next question after 2 seconds
+    } else {
+      setTimeout(() => {
+        questionEl.textContent = "Quiz Completed!";
+        optionsEl.innerHTML = '';
+        resultEl.textContent = `Your score: ${score} / ${quiz.length}`;
+      }, 2000);
+    }
+  }
+
+  // Load first question
+  loadQuestion();
+
+  // Joke Fetcher
+  async function fetchJoke() {
+    const jokeEl = document.getElementById('joke');
+    jokeEl.textContent = 'Fetching a new joke...';
+    try {
+      const response = await fetch('https://icanhazdadjoke.com/', {
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await response.json();
+      jokeEl.textContent = data.joke;
+    } catch (error) {
+      jokeEl.textContent = 'Failed to fetch a joke.';
+      console.error(error);
+    }
+  }
+
+  fetchJoke();
+</script>
+
+</body>
+</html>
